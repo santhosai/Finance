@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            margin-top: 10px;
+        }
+
+        .bg-image {
+            width: 200px;
+            height: 200px;
+            background-image: url("{{ url_for('static', filename='bg.jpg') }}?v={{ bg_version }}");
+            background-size: cover;
+            background-position: center;
+            border-radius: 15px;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card {
+            /* Slightly transparent card so the background shows through and image is visible */
+            background: rgba(255,255,255,0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+
+
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+        }
+
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 25px;
+            padding-right: 40px;
+        }
+
+        select:hover {
+            border-color: #764ba2;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+            transform: translateY(-2px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        .close {
+            color: white;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close:hover {
+            transform: scale(1.2);
+        }
+
+        .modal-body {
+            padding: 30px;
+            /* make modal scrollable on small screens */
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .detail-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .detail-value.positive {
+            color: #28a745;
+        }
+
+        .detail-value.negative {
+            color: #dc3545;
+        }
+
+        .detail-value.neutral {
+            color: #667eea;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn-close {
+            background: #e9ecef;
+            color: #333;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-close:hover {
+            background: #dee2e6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-top: 10px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 16px;
+                width: 92%;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .bg-image {
+                width: 150px;
+                height: 150px;
+            }
+
+            .modal-content {
+                margin: 20px;
+                max-width: 100%;
+            }
+
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px 0;
+            }
+
+            .detail-value {
+                margin-top: 8px;
+            }
+            
+            select {
+                padding: 14px;
+                font-size: 1.05em;
+            }
+            .btn-group button {
+                padding: 14px;
+                font-size: 1.05em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OmSaiMurugan Finance</h1>
+        <p>Select a person to view details</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="form-group">
+                <label for="nameDropdown">👤 Select Person:</label>
+                <select id="nameDropdown">
+                    <option value="">-- Choose a person --</option>
+                </select>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-primary" id="viewBtn">View Details</button>
+                <button class="btn-secondary" id="clearBtn">Clear</button>
+            </div>
+
+            <div id="message"></div>
+        </div>
+        
+        <div class="bg-image"></div>
+    </div>
+
+    <!-- Modal -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Details</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="modalBody" class="loading">Loading...</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-close" id="closeBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const nameDropdown = document.getElementById('nameDropdown');
+        const viewBtn = document.getElementById('viewBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const modal = document.getElementById('detailsModal');
+        const closeBtn = document.getElementById('closeBtn');
+        const closeIcon = document.querySelector('.close');
+        const messageDiv = document.getElementById('message');
+
+        // Load names on page load
+        loadNames();
+
+        function loadNames() {
+            fetch('/api/names')
+                .then(response => response.json())
+                .then(names => {
+                    const options = ['<option value="">-- Choose a person --</option>'];
+                    names.forEach(name => {
+                        options.push(`<option value="${name}">${name}</option>`);
+                    });
+                    nameDropdown.innerHTML = options.join('');
+                })
+                .catch(error => {
+                    console.error('Error loading names:', error);
+                    messageDiv.innerHTML = '<div class="error">❌ Error loading names</div>';
+                });
+        }
+
+        viewBtn.addEventListener('click', () => {
+            const selectedName = nameDropdown.value;
+            if (!selectedName) {
+                messageDiv.innerHTML = '<div class="error">⚠️ Please select a person first</div>';
+                return;
+            }
+            messageDiv.innerHTML = '';
+            showDetails(selectedName);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            nameDropdown.value = '';
+            messageDiv.innerHTML = '';
+            modal.style.display = 'none';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        closeIcon.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Allow Enter key to show details
+        nameDropdown.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                viewBtn.click();
+            }
+        });
+
+        function showDetails(name) {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = '<div class="loading">⏳ Loading details...</div>';
+            modal.style.display = 'block';
+
+            fetch(`/api/person/${encodeURIComponent(name)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Person not found');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('modalTitle').textContent = `📊 ${data.name}`;
+                    
+                    const detailsHTML = `
+                        <div class="detail-item">
+                            <span class="detail-label">📅 Amount Given Date:</span>
+                            <span class="detail-value">${data.date_given}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">💵 Amount Given:</span>
+                            <span class="detail-value neutral">₹${data.amount_given.toLocaleString()}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">💸 Amount Paid:</span>
+                            <span class="detail-value positive">₹${data.amount_paid.toLocaleString()}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">⏳ Balance Amount:</span>
+                            <span class="detail-value ${data.balance_amount > 0 ? 'negative' : 'positive'}">₹${data.balance_amount.toLocaleString()}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📆 Balance Weeks:</span>
+                            <span class="detail-value neutral">${data.balance_weeks} weeks</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">✅ Paid Weeks:</span>
+                            <span class="detail-value positive">${data.paid_weeks} weeks</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📊 Total Weeks:</span>
+                            <span class="detail-value neutral">${data.total_weeks} weeks</span>
+                        </div>
+                    `;
+                    
+                    modalBody.innerHTML = detailsHTML;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalBody.innerHTML = '<div class="error">❌ ' + error.message + '</div>';
+                });
+        }
+    </script>
+</body>
+</html>
