@@ -1,8 +1,11 @@
-import pandas as pd
 from flask import Flask, render_template, jsonify
-import os
 
 app = Flask(__name__)
+
+test_data = [
+    {'name': 'Jaga', 'amount_given': 10000, 'amount_paid': 3000, 'balance_amount': 7000, 'balance_weeks': 7},
+    {'name': 'Ravi', 'amount_given': 5000, 'amount_paid': 1000, 'balance_amount': 4000, 'balance_weeks': 4}
+]
 
 @app.route('/')
 def index():
@@ -10,34 +13,27 @@ def index():
 
 @app.route('/api/names')
 def get_names():
-    try:
-        df = pd.read_excel('nov 11.xlsx', sheet_name='Finance', header=1)
-        df = df[(df['Balance Amount '] != 0) & (df['Balance Amount '].notna())]
-        df = df[df['Names'].notna()]
-        names = sorted(df['Names'].unique().tolist())
-        return jsonify(names)
-    except:
-        return jsonify(['Test User'])
+    names = [person['name'] for person in test_data]
+    return jsonify(names)
 
 @app.route('/api/person/<name>')
 def get_person_details(name):
-    try:
-        df = pd.read_excel('nov 11.xlsx', sheet_name='Finance', header=1)
-        person = df[df['Names'] == name].iloc[0]
-        
-        return jsonify({
-            'name': person['Names'],
-            'date_given': 'N/A',
-            'amount_given': float(person[' Amount Given']),
-            'amount_paid': float(person['Amount Paid ']),
-            'balance_amount': float(person['Balance Amount ']),
-            'balance_weeks': int(person['Balance Weeks']),
-            'paid_weeks': 3,  # Fixed for now
-            'total_weeks': 10
-        })
-    except:
-        return jsonify({'error': 'Not found'}), 404
+    for person in test_data:
+        if person['name'] == name:
+            paid_weeks = person['amount_paid'] // 1000
+            return jsonify({
+                'name': person['name'],
+                'date_given': '01-11-2024',
+                'amount_given': person['amount_given'],
+                'amount_paid': person['amount_paid'],
+                'balance_amount': person['balance_amount'],
+                'balance_weeks': person['balance_weeks'],
+                'paid_weeks': paid_weeks,
+                'total_weeks': paid_weeks + person['balance_weeks']
+            })
+    return jsonify({'error': 'Person not found'}), 404
 
 if __name__ == '__main__':
+    import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
