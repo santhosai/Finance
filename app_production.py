@@ -60,12 +60,18 @@ def get_person_details(name):
     
     row = person_data.iloc[0]
     
-    # Calculate paid weeks (count non-zero values in date columns)
-    date_columns = [col for col in finance_filtered.columns if '202' in str(col) or '201' in str(col)]
-    paid_weeks = 0
-    for col in date_columns:
-        if pd.notna(row[col]) and row[col] != 0:
-            paid_weeks += 1
+    # Calculate paid weeks: amount_paid ÷ weekly_amount
+    amount_given = float(row[' Amount Given']) if pd.notna(row[' Amount Given']) else 0
+    amount_paid = float(row['Amount Paid ']) if pd.notna(row['Amount Paid ']) else 0
+    balance_weeks = int(row['Balance Weeks']) if pd.notna(row['Balance Weeks']) else 0
+    balance_amount = float(row['Balance Amount '])
+    
+    # Calculate weekly payment amount
+    if balance_weeks > 0:
+        weekly_amount = balance_amount / balance_weeks
+        paid_weeks = int(amount_paid / weekly_amount) if weekly_amount > 0 else 0
+    else:
+        paid_weeks = 0
     
     # Balance weeks
     balance_weeks = row['Balance Weeks'] if pd.notna(row['Balance Weeks']) else 0
