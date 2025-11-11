@@ -40,8 +40,10 @@ def index():
                 <p><strong>💵 Amount Given:</strong> ₹${data.amount_given.toLocaleString()}</p>
                 <p><strong>💸 Amount Paid:</strong> ₹${data.amount_paid.toLocaleString()}</p>
                 <p><strong>⏳ Balance Amount:</strong> ₹${data.balance_amount.toLocaleString()}</p>
+                <p><strong>💰 Weekly Amount:</strong> ₹${data.weekly_amount}</p>
                 <p><strong>✅ Paid Weeks:</strong> ${data.paid_weeks} weeks</p>
                 <p><strong>📆 Balance Weeks:</strong> ${data.balance_weeks} weeks</p>
+                <p><strong>📊 Total Weeks:</strong> 10 weeks</p>
             `;
         });
     }
@@ -57,21 +59,28 @@ def get_names():
 @app.route('/api/person/<name>')
 def get_person_details(name):
     data = {
-        'Jaga': {'amount_given': 10000, 'amount_paid': 3000, 'balance_amount': 7000, 'balance_weeks': 7},
-        'Ravi': {'amount_given': 5000, 'amount_paid': 1000, 'balance_amount': 4000, 'balance_weeks': 4},
-        'Kumar': {'amount_given': 8000, 'amount_paid': 2000, 'balance_amount': 6000, 'balance_weeks': 6}
+        'Jaga': {'amount_given': 10000, 'amount_paid': 3000},
+        'Ravi': {'amount_given': 2000, 'amount_paid': 400},
+        'Kumar': {'amount_given': 5500, 'amount_paid': 1100}
     }
     
     if name in data:
         person = data[name]
-        paid_weeks = person['amount_paid'] // 1000  # ₹1000 per week
+        
+        # Fixed logic: Always 10 weeks total
+        weekly_amount = person['amount_given'] / 10
+        paid_weeks = int(person['amount_paid'] / weekly_amount)
+        balance_weeks = 10 - paid_weeks
+        balance_amount = person['amount_given'] - person['amount_paid']
+        
         return jsonify({
             'name': name,
             'amount_given': person['amount_given'],
             'amount_paid': person['amount_paid'],
-            'balance_amount': person['balance_amount'],
-            'balance_weeks': person['balance_weeks'],
-            'paid_weeks': paid_weeks
+            'balance_amount': balance_amount,
+            'weekly_amount': int(weekly_amount),
+            'paid_weeks': paid_weeks,
+            'balance_weeks': balance_weeks
         })
     
     return jsonify({'error': 'Not found'}), 404
